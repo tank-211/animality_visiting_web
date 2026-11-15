@@ -220,7 +220,7 @@ function Header({ current }: { current: string }) {
             Care that feels like family <PawPrint size={13} />
           </span>
           <span>
-            <Phone size={14} /> +91 98765 43210
+            <Phone size={14} /> +91 93568 74251
           </span>
         </div>
       </div>
@@ -518,7 +518,7 @@ function CTA() {
         <div className="button-row">
           <a
             className="btn btn-light"
-            href="https://wa.me/919876543210"
+            href="https://wa.me/919356874251"
             target="_blank"
             rel="noreferrer"
           >
@@ -571,15 +571,15 @@ function Footer() {
         <div className="contact-list">
           <h4>Come say hello</h4>
           <p>
-            <MapPin /> College Road, Nashik,
+            <MapPin /> 2, Agra–Mumbai Road, Jadhav Mala,
             <br />
-            Maharashtra 422005
+            Nashik, Maharashtra 422003
           </p>
           <p>
-            <Phone /> +91 98765 43210
+            <Phone /> +91 93568 74251
           </p>
           <p>
-            <Mail /> hello@animalitypets.in
+            <Mail /> animalitybreedingcentre@gmail.com
           </p>
           <p>
             <Clock3 /> Mon–Sun, 10am–8pm
@@ -788,7 +788,7 @@ function PetDetails({ id }: { id: string }) {
             </p>
             <div className="button-row">
               <Button onClick={() => go("contact")}>Send an enquiry</Button>
-              <a className="btn btn-secondary" href="https://wa.me/919876543210">
+              <a className="btn btn-secondary" href="https://wa.me/919356874251">
                 <MessageCircle size={18} /> WhatsApp
               </a>
             </div>
@@ -878,7 +878,7 @@ function ContactPage() {
  const [sent,setSent]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
  async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");const f=new FormData(e.currentTarget);try{await api("/enquiries",{method:"POST",body:JSON.stringify({name:f.get("name"),phone:f.get("phone"),email:f.get("email"),interest:f.get("interest"),message:f.get("message")})});setSent(true);}catch(err){setError(err instanceof Error?err.message:"Unable to send enquiry. Please contact us on WhatsApp.");}finally{setBusy(false);}}
  return <><PageHero eyebrow="Contact" title="Let’s Talk About Your Pet." copy="Questions, enquiries or simply looking for advice? Our friendly Nashik team is here."/>
- <section className="section cream"><div className="container contact-grid"><div className="contact-copy"><SectionTitle eyebrow="Come say hello" title="We’re Always Happy to Help." copy="Reach out in the way that feels easiest."/><div className="contact-cards"><a href="https://wa.me/919876543210"><Phone/><span><small>Call or WhatsApp</small><strong>Contact Animality Pets</strong></span></a><a href="https://maps.google.com/?q=Animality+Pets+Nashik"><MapPin/><span><small>Visit in Nashik</small><strong>Nashik, Maharashtra</strong></span></a></div></div>
+ <section className="section cream"><div className="container contact-grid"><div className="contact-copy"><SectionTitle eyebrow="Come say hello" title="We’re Always Happy to Help." copy="Reach out in the way that feels easiest."/><div className="contact-cards"><a href="https://wa.me/919356874251"><Phone/><span><small>Call or WhatsApp</small><strong>Contact Animality Pets</strong></span></a><a href="https://www.google.com/maps/search/?api=1&query=Animality+Pets%2C+2%2C+Agra+Mumbai+Road%2C+Jadhav+Mala%2C+Nashik%2C+Maharashtra+422003"><MapPin/><span><small>Visit in Nashik</small><strong>Nashik, Maharashtra</strong></span></a></div></div>
  <form className="contact-form" onSubmit={submit}><div className="form-heading"><span>Send an enquiry</span><h2>How can we help?</h2></div>{sent?<div className="success"><BadgeCheck/><h3>Thank you!</h3><p>Your enquiry has been received. Our team will be in touch.</p><Button onClick={()=>setSent(false)}>Send another</Button></div>:<><label>Your name<input name="name" required minLength={2} placeholder="Full name"/></label><div className="field-row"><label>Phone number<input name="phone" required type="tel" pattern="[+0-9() -]{8,20}" placeholder="+91"/></label><label>Email address<input name="email" type="email" placeholder="you@email.com"/></label></div><label>I’m interested in<select name="interest"><option>Pet enquiry</option><option>Pet care & guidance</option><option>Products & accessories</option><option>Customized keychains</option></select></label><label>Tell us more<textarea name="message" rows={4} required minLength={5} placeholder="How can we help you and your pet?"/></label>{error&&<p className="form-error">{error}</p>}<Button type="submit">{busy?"Sending…":"Send enquiry"}</Button></>}</form></div></section></>;
 }
 
@@ -922,7 +922,7 @@ function App() {
       <Footer />
       <a
         className="whatsapp"
-        href="https://wa.me/919876543210"
+        href="https://wa.me/919356874251"
         target="_blank"
         rel="noreferrer"
         aria-label="Chat with Animality Pets on WhatsApp"
