@@ -590,7 +590,7 @@ function Footer() {
       </div>
       <div className="container copyright">
         <span>© 2025 Animality Pets. Made with care in Nashik.</span>
-        <span>Privacy · Terms</span>
+        <span><button className="admin-footer-link" onClick={() => go("admin")}>Admin</button> · Privacy · Terms</span>
       </div>
     </footer>
   );
