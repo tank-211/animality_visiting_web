@@ -913,7 +913,8 @@ function App() {
   else if (route.startsWith("pet/")) page = <PetDetails id={route.split("/")[1]} />;
   else if (route === "gallery") page = <GalleryPage />;
   else if (route === "shop") page = <ShopPage />;
-  else if (route === "contact") page = <ContactPage />;\n  else if (route === "admin") page = <AdminPage />;
+  else if (route === "contact") page = <ContactPage />;
+  else if (route === "admin") page = <AdminPage />;
   return (
     <div>
       <Header current={current} />
