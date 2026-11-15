@@ -11,6 +11,9 @@ import { v2 as cloudinary } from "cloudinary";
 
 const { Pool } = pg;
 const app = express();
+
+app.set("trust proxy", 1);
+
 const port = Number(process.env.PORT || 10000);
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL?.includes("localhost") ? false : { rejectUnauthorized: false } });
 const allowedOrigins = (process.env.CORS_ORIGINS || "").split(",").map(x => x.trim()).filter(Boolean);
