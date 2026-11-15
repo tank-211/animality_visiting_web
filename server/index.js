@@ -36,7 +36,30 @@ async function initialize() {
     CREATE TABLE IF NOT EXISTS reviews (id BIGSERIAL PRIMARY KEY, customer_name TEXT NOT NULL, rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5), review_text TEXT NOT NULL, source_url TEXT, featured BOOLEAN NOT NULL DEFAULT TRUE, created_at TIMESTAMPTZ DEFAULT NOW());
     CREATE TABLE IF NOT EXISTS gallery_photos (id BIGSERIAL PRIMARY KEY, image_url TEXT NOT NULL, public_id TEXT NOT NULL, caption TEXT DEFAULT '', category TEXT NOT NULL DEFAULT 'Pets', created_at TIMESTAMPTZ DEFAULT NOW());
     CREATE TABLE IF NOT EXISTS enquiries (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, interest TEXT, message TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new', created_at TIMESTAMPTZ DEFAULT NOW());
+    CREATE TABLE IF NOT EXISTS products (
+      id BIGSERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      price NUMERIC(10,2) NOT NULL CHECK (price >= 0),
+      image_url TEXT NOT NULL,
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS products_active_created_idx ON products(active, created_at DESC);
   `);
+  const productCount = await pool.query("SELECT COUNT(*)::int AS count FROM products");
+  if (productCount.rows[0].count === 0) {
+    await pool.query(
+      "INSERT INTO products(name,category,description,price,image_url) VALUES ($1,$2,$3,$4,$5),($6,$7,$8,$9,$10),($11,$12,$13,$14,$15)",
+      [
+        "Artisan Leather Collar","Walk essentials","A stylish everyday collar for comfortable walks.",1299,"https://images.unsplash.com/photo-1546687813-3fcc1c363a07?auto=format&fit=crop&w=900&q=85",
+        "Plush Comfort Toy","Toys","A soft playtime companion for your pet.",699,"https://images.unsplash.com/photo-1591946614720-90a587da4a36?auto=format&fit=crop&w=900&q=85",
+        "Everyday Adventure Kit","Accessories","A curated set of everyday pet essentials.",1899,"https://images.unsplash.com/photo-1600352712371-15fd49ca42b5?auto=format&fit=crop&w=900&q=85"
+      ]
+    );
+  }
   const email = process.env.ADMIN_EMAIL?.toLowerCase().trim();
   const password = process.env.ADMIN_PASSWORD;
   if (email && password) {
@@ -63,6 +86,44 @@ app.get("/api/reviews", asyncRoute(async (_req, res) => {
 app.get("/api/gallery", asyncRoute(async (_req, res) => {
   const { rows } = await pool.query("SELECT id, image_url AS \"imageUrl\", caption, category FROM gallery_photos ORDER BY created_at DESC LIMIT 100");
   res.set("Cache-Control", "public, max-age=60").json({ photos: rows });
+}));
+app.get("/api/products", asyncRoute(async (_req, res) => {
+  const { rows } = await pool.query("SELECT id,name,category,description,price::float AS price,image_url AS \"imageUrl\" FROM products WHERE active=TRUE ORDER BY created_at DESC");
+  res.set("Cache-Control", "public, max-age=60").json({ products: rows });
+}));
+app.get("/api/admin/products", auth, asyncRoute(async (_req, res) => {
+  const { rows } = await pool.query("SELECT id,name,category,description,price::float AS price,image_url AS \"imageUrl\",active FROM products ORDER BY created_at DESC");
+  res.json({ products: rows });
+}));
+app.post("/api/admin/products", auth, asyncRoute(async (req, res) => {
+  const { name, category, description = "", price, imageUrl, active = true } = req.body || {};
+  const amount = Number(price);
+  if (typeof name !== "string" || !name.trim() || typeof category !== "string" || !category.trim() || !Number.isFinite(amount) || amount < 0 || typeof imageUrl !== "string" || !/^https:\/\//i.test(imageUrl)) {
+    return res.status(400).json({ error: "Enter a product name, category, valid price and HTTPS image URL." });
+  }
+  const { rows } = await pool.query(
+    "INSERT INTO products(name,category,description,price,image_url,active) VALUES($1,$2,$3,$4,$5,$6) RETURNING id",
+    [name.trim().slice(0,120),category.trim().slice(0,80),String(description).slice(0,2000),amount,imageUrl.trim(),Boolean(active)]
+  );
+  res.status(201).json({ success: true, id: rows[0].id });
+}));
+app.put("/api/admin/products/:id", auth, asyncRoute(async (req, res) => {
+  const { name, category, description = "", price, imageUrl, active = true } = req.body || {};
+  const amount = Number(price);
+  if (typeof name !== "string" || !name.trim() || typeof category !== "string" || !category.trim() || !Number.isFinite(amount) || amount < 0 || typeof imageUrl !== "string" || !/^https:\/\//i.test(imageUrl)) {
+    return res.status(400).json({ error: "Enter a product name, category, valid price and HTTPS image URL." });
+  }
+  const { rowCount } = await pool.query(
+    "UPDATE products SET name=$1,category=$2,description=$3,price=$4,image_url=$5,active=$6,updated_at=NOW() WHERE id=$7",
+    [name.trim().slice(0,120),category.trim().slice(0,80),String(description).slice(0,2000),amount,imageUrl.trim(),Boolean(active),req.params.id]
+  );
+  if (!rowCount) return res.status(404).json({ error: "Product not found." });
+  res.json({ success: true });
+}));
+app.delete("/api/admin/products/:id", auth, asyncRoute(async (req, res) => {
+  const { rowCount } = await pool.query("DELETE FROM products WHERE id=$1", [req.params.id]);
+  if (!rowCount) return res.status(404).json({ error: "Product not found." });
+  res.json({ success: true });
 }));
 app.post("/api/enquiries", rateLimit({ windowMs: 60 * 60 * 1000, limit: 8, standardHeaders: true, legacyHeaders: false }), asyncRoute(async (req, res) => {
   const { name, phone, email = "", interest = "General enquiry", message } = req.body || {};
