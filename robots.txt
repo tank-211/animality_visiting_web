@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://animalitypets.in/sitemap.xml
