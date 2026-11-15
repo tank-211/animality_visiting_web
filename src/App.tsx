@@ -24,6 +24,16 @@ import {
   X,
 } from "lucide-react";
 
+type GoogleReview = { name?: string; rating?: number; text?: { text?: string }; relativePublishTimeDescription?: string; authorAttribution?: { displayName?: string } };
+type GooglePhoto = { name: string };
+type GoogleBusiness = { rating?: number; userRatingCount?: number; googleMapsUri?: string; reviews?: GoogleReview[]; photos?: GooglePhoto[] };
+function useGoogleBusiness() {
+ const [data,setData]=useState<GoogleBusiness|null>(null);
+ const [error,setError]=useState("");
+ useEffect(()=>{fetch("/api/google-business").then(async r=>{if(!r.ok)throw new Error((await r.json()).error||"Google data unavailable");return r.json();}).then(setData).catch(e=>setError(e.message||"Unable to load Google data"));},[]);
+ return {data,error};
+}
+
 const U = {
   hero: "https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&w=1800&q=88",
   about:
@@ -470,81 +480,25 @@ function WhySection() {
 }
 
 function GallerySection({ full = false }: { full?: boolean }) {
-  return (
-    <section className="section white">
-      <div className="container">
-        <div className="split-heading">
-          <SectionTitle
-            eyebrow="Life at Animality"
-            title="Happy Tails, Beautiful Moments."
-            copy="A little window into the joy, personality and everyday magic of our pet community."
-          />
-          <a
-            className="instagram-link"
-            href="https://instagram.com"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Camera /> @animalitypets
-          </a>
-        </div>
-        <div className={`gallery-grid ${full ? "gallery-full" : ""}`}>
-          {[...gallery, ...(full ? gallery.slice().reverse() : [])].map((image, i) => (
-            <button
-              className={`gallery-item item-${i % 6}`}
-              key={`${image}-${i}`}
-              aria-label="View gallery image"
-            >
-              <img src={image} alt={`Animality pet moment ${i + 1}`} />
-              <span>
-                <Camera />
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+ const {data,error}=useGoogleBusiness();
+ const photos=data?.photos||[];
+ return <section className="section white"><div className="container">
+  <div className="split-heading"><SectionTitle eyebrow="Life at Animality" title="Happy Tails, Beautiful Moments." copy="Photos from the Animality Pets Google Business Profile."/>
+  {data?.googleMapsUri&&<a className="instagram-link" href={data.googleMapsUri} target="_blank" rel="noreferrer"><Camera/> View on Google</a>}</div>
+  {photos.length?<div className={`gallery-grid ${full?"gallery-full":""}`}>{(full?photos:photos.slice(0,6)).map((p,i)=><div className={`gallery-item item-${i%6}`} key={p.name}><img src={`/api/google-business?photo=${encodeURIComponent(p.name)}`} alt={`Animality Pets business photo ${i+1}`}/></div>)}</div>:<p>{error||"Loading Google business photos…"}</p>}
+  <p className="google-attribution">Photos provided by Google</p>
+ </div></section>;
 }
 
 function Testimonials() {
-  const reviews = [
-    [
-      "“Animality made bringing Bruno home feel easy and reassuring. They still check in, months later.”",
-      "Riya Shah",
-      "Golden Retriever parent",
-    ],
-    [
-      "“The team genuinely listens. Their guidance has made us much more confident first-time pet parents.”",
-      "Aditya Patil",
-      "Labrador parent",
-    ],
-    [
-      "“Beautiful products, kind people and a level of care that is rare to find. Our favourite pet place in Nashik.”",
-      "Neha Kulkarni",
-      "Pet parent",
-    ],
-  ];
-  return (
-    <section className="section testimonial-section">
-      <div className="container">
-        <SectionTitle eyebrow="Kind words" title="Stories From Our Pet Family." center />
-        <div className="reviews">
-          {reviews.map(([quote, name, role]) => (
-            <article key={name}>
-              <Quote className="quote" />
-              <div className="stars">★★★★★</div>
-              <p>{quote}</p>
-              <div>
-                <strong>{name}</strong>
-                <small>{role}</small>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+ const {data,error}=useGoogleBusiness();
+ const reviews=data?.reviews||[];
+ return <section className="section testimonial-section"><div className="container">
+  <SectionTitle eyebrow="Google reviews" title="Stories From Our Pet Family." center/>
+  {data?.rating&&<div className="google-rating"><strong>{data.rating.toFixed(1)} ★</strong><span>{data.userRatingCount||0} Google ratings</span></div>}
+  {reviews.length?<div className="reviews">{reviews.map((r,i)=><article key={r.name||i}><Quote className="quote"/><div className="stars">{"★".repeat(Math.max(0,Math.min(5,Math.round(r.rating||0))))}</div><p>{r.text?.text||"Google review"}</p><div><strong>{r.authorAttribution?.displayName||"Google user"}</strong><small>{r.relativePublishTimeDescription||"Google reviewer"}</small></div></article>)}</div>:<p>{error||"Loading Google reviews…"}</p>}
+  {data?.googleMapsUri&&<p className="google-attribution"><a href={data.googleMapsUri} target="_blank" rel="noreferrer">Read more reviews on Google</a> · Reviews provided by Google</p>}
+ </div></section>;
 }
 
 function CTA() {
