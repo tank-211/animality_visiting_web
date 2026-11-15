@@ -1708,3 +1708,8 @@ footer {
     bottom: 15px;
   }
 }
+
+.google-rating{display:flex;justify-content:center;align-items:center;gap:12px;margin:-12px 0 28px;color:var(--muted);font-size:13px}
+.google-rating strong{font-size:24px;color:#d4a017}
+.google-attribution{text-align:center;font-size:11px;color:var(--muted);margin-top:20px}
+.google-attribution a{color:var(--green);text-decoration:underline}
