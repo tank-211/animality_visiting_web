@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://animalitypets.vercel.app/sitemap.xml
