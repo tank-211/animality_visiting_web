@@ -15,6 +15,11 @@ import {
   PawPrint,
   Phone,
   Quote,
+  Star,
+  Upload,
+  LogOut,
+  Trash2,
+  Pencil,
   Share2,
   ShieldCheck,
   ShoppingBag,
@@ -24,14 +29,17 @@ import {
   X,
 } from "lucide-react";
 
-type GoogleReview = { name?: string; rating?: number; text?: { text?: string }; relativePublishTimeDescription?: string; authorAttribution?: { displayName?: string } };
-type GooglePhoto = { name: string };
-type GoogleBusiness = { rating?: number; userRatingCount?: number; googleMapsUri?: string; reviews?: GoogleReview[]; photos?: GooglePhoto[] };
-function useGoogleBusiness() {
- const [data,setData]=useState<GoogleBusiness|null>(null);
- const [error,setError]=useState("");
- useEffect(()=>{fetch("/api/google-business").then(async r=>{if(!r.ok)throw new Error((await r.json()).error||"Google data unavailable");return r.json();}).then(setData).catch(e=>setError(e.message||"Unable to load Google data"));},[]);
- return {data,error};
+type Review = { id: number; customerName: string; rating: number; reviewText: string; sourceUrl?: string; featured: boolean };
+type GalleryPhoto = { id: number; imageUrl: string; caption: string; category: string };
+const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+async function api<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
+  const headers = new Headers(options.headers);
+  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const response = await fetch(`${API_URL}/api${path}`, { ...options, headers });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Request failed");
+  return data as T;
 }
 
 const U = {
@@ -480,24 +488,19 @@ function WhySection() {
 }
 
 function GallerySection({ full = false }: { full?: boolean }) {
- const {data,error}=useGoogleBusiness();
- const photos=data?.photos||[];
+ const [photos,setPhotos]=useState<GalleryPhoto[]>([]);
+ useEffect(()=>{api<{photos:GalleryPhoto[]}>("/gallery").then(x=>setPhotos(x.photos)).catch(()=>setPhotos([]));},[]);
  return <section className="section white"><div className="container">
-  <div className="split-heading"><SectionTitle eyebrow="Life at Animality" title="Happy Tails, Beautiful Moments." copy="Photos from the Animality Pets Google Business Profile."/>
-  {data?.googleMapsUri&&<a className="instagram-link" href={data.googleMapsUri} target="_blank" rel="noreferrer"><Camera/> View on Google</a>}</div>
-  {photos.length?<div className={`gallery-grid ${full?"gallery-full":""}`}>{(full?photos:photos.slice(0,6)).map((p,i)=><div className={`gallery-item item-${i%6}`} key={p.name}><img src={`/api/google-business?photo=${encodeURIComponent(p.name)}`} alt={`Animality Pets business photo ${i+1}`}/></div>)}</div>:<p>{error||"Loading Google business photos…"}</p>}
-  <p className="google-attribution">Photos provided by Google</p>
+  <div className="split-heading"><SectionTitle eyebrow="Life at Animality" title="Happy Tails, Beautiful Moments." copy="Moments shared by the Animality Pets community."/></div>
+  {photos.length?<div className={`gallery-grid ${full?"gallery-full":""}`}>{(full?photos:photos.slice(0,6)).map((p,i)=><div className={`gallery-item item-${i%6}`} key={p.id}><img src={p.imageUrl} alt={p.caption||"Animality Pets gallery"}/>{p.caption&&<span>{p.caption}</span>}</div>)}</div>:<div className="empty-content"><Camera/><p>Our pet gallery is being updated. Visit us again soon!</p></div>}
  </div></section>;
 }
-
 function Testimonials() {
- const {data,error}=useGoogleBusiness();
- const reviews=data?.reviews||[];
+ const [reviews,setReviews]=useState<Review[]>([]);
+ useEffect(()=>{api<{reviews:Review[]}>("/reviews").then(x=>setReviews(x.reviews)).catch(()=>setReviews([]));},[]);
  return <section className="section testimonial-section"><div className="container">
-  <SectionTitle eyebrow="Google reviews" title="Stories From Our Pet Family." center/>
-  {data?.rating&&<div className="google-rating"><strong>{data.rating.toFixed(1)} ★</strong><span>{data.userRatingCount||0} Google ratings</span></div>}
-  {reviews.length?<div className="reviews">{reviews.map((r,i)=><article key={r.name||i}><Quote className="quote"/><div className="stars">{"★".repeat(Math.max(0,Math.min(5,Math.round(r.rating||0))))}</div><p>{r.text?.text||"Google review"}</p><div><strong>{r.authorAttribution?.displayName||"Google user"}</strong><small>{r.relativePublishTimeDescription||"Google reviewer"}</small></div></article>)}</div>:<p>{error||"Loading Google reviews…"}</p>}
-  {data?.googleMapsUri&&<p className="google-attribution"><a href={data.googleMapsUri} target="_blank" rel="noreferrer">Read more reviews on Google</a> · Reviews provided by Google</p>}
+  <SectionTitle eyebrow="Customer reviews" title="Stories From Our Pet Family." center/>
+  {reviews.length?<div className="reviews">{reviews.filter(r=>r.featured).map(r=><article key={r.id}><Quote className="quote"/><div className="stars">{"★".repeat(r.rating)}</div><p>{r.reviewText}</p><div><strong>{r.customerName}</strong><small>{r.sourceUrl?<a href={r.sourceUrl} target="_blank" rel="noreferrer">View original review</a>:"Animality Pets customer"}</small></div></article>)}</div>:<div className="empty-content"><Star/><p>Customer stories will appear here soon.</p></div>}
  </div></section>;
 }
 
@@ -874,101 +877,27 @@ function PlusIcon() {
 }
 
 function ContactPage() {
-  const [sent, setSent] = useState(false);
-  return (
-    <>
-      <PageHero
-        eyebrow="Contact"
-        title="Let’s Talk About Your Pet."
-        copy="Questions, enquiries or simply looking for advice? Our friendly Nashik team is here."
-      />
-      <section className="section cream">
-        <div className="container contact-grid">
-          <div className="contact-copy">
-            <SectionTitle
-              eyebrow="Come say hello"
-              title="We’re Always Happy to Help."
-              copy="Reach out in the way that feels easiest. We usually respond within a few hours during store timings."
-            />
-            <div className="contact-cards">
-              <a href="tel:+919876543210">
-                <Phone />
-                <span>
-                  <small>Call our team</small>
-                  <strong>+91 98765 43210</strong>
-                </span>
-              </a>
-              <a href="mailto:hello@animalitypets.in">
-                <Mail />
-                <span>
-                  <small>Email us</small>
-                  <strong>hello@animalitypets.in</strong>
-                </span>
-              </a>
-              <a href="https://maps.google.com" target="_blank" rel="noreferrer">
-                <MapPin />
-                <span>
-                  <small>Visit in Nashik</small>
-                  <strong>College Road, Nashik 422005</strong>
-                </span>
-              </a>
-            </div>
-          </div>
-          <form
-            className="contact-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setSent(true);
-            }}
-          >
-            <div className="form-heading">
-              <span>Send an enquiry</span>
-              <h2>How can we help?</h2>
-            </div>
-            {sent ? (
-              <div className="success">
-                <BadgeCheck />
-                <h3>Thank you!</h3>
-                <p>Your message is on its way. Our team will be in touch shortly.</p>
-                <Button onClick={() => setSent(false)}>Send another</Button>
-              </div>
-            ) : (
-              <>
-                <label>
-                  Your name
-                  <input required placeholder="Full name" />
-                </label>
-                <div className="field-row">
-                  <label>
-                    Phone number
-                    <input required type="tel" placeholder="+91" />
-                  </label>
-                  <label>
-                    Email address
-                    <input type="email" placeholder="you@email.com" />
-                  </label>
-                </div>
-                <label>
-                  I’m interested in
-                  <select>
-                    <option>Pet enquiry</option>
-                    <option>Pet care & guidance</option>
-                    <option>Products & accessories</option>
-                    <option>Customized keychains</option>
-                  </select>
-                </label>
-                <label>
-                  Tell us more
-                  <textarea rows={4} placeholder="How can we help you and your pet?" />
-                </label>
-                <Button type="submit">Send enquiry</Button>
-              </>
-            )}
-          </form>
-        </div>
-      </section>
-    </>
-  );
+ const [sent,setSent]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");const f=new FormData(e.currentTarget);try{await api("/enquiries",{method:"POST",body:JSON.stringify({name:f.get("name"),phone:f.get("phone"),email:f.get("email"),interest:f.get("interest"),message:f.get("message")})});setSent(true);}catch(err){setError(err instanceof Error?err.message:"Unable to send enquiry. Please contact us on WhatsApp.");}finally{setBusy(false);}}
+ return <><PageHero eyebrow="Contact" title="Let’s Talk About Your Pet." copy="Questions, enquiries or simply looking for advice? Our friendly Nashik team is here."/>
+ <section className="section cream"><div className="container contact-grid"><div className="contact-copy"><SectionTitle eyebrow="Come say hello" title="We’re Always Happy to Help." copy="Reach out in the way that feels easiest."/><div className="contact-cards"><a href="https://wa.me/919876543210"><Phone/><span><small>Call or WhatsApp</small><strong>Contact Animality Pets</strong></span></a><a href="https://maps.google.com/?q=Animality+Pets+Nashik"><MapPin/><span><small>Visit in Nashik</small><strong>Nashik, Maharashtra</strong></span></a></div></div>
+ <form className="contact-form" onSubmit={submit}><div className="form-heading"><span>Send an enquiry</span><h2>How can we help?</h2></div>{sent?<div className="success"><BadgeCheck/><h3>Thank you!</h3><p>Your enquiry has been received. Our team will be in touch.</p><Button onClick={()=>setSent(false)}>Send another</Button></div>:<><label>Your name<input name="name" required minLength={2} placeholder="Full name"/></label><div className="field-row"><label>Phone number<input name="phone" required type="tel" pattern="[+0-9() -]{8,20}" placeholder="+91"/></label><label>Email address<input name="email" type="email" placeholder="you@email.com"/></label></div><label>I’m interested in<select name="interest"><option>Pet enquiry</option><option>Pet care & guidance</option><option>Products & accessories</option><option>Customized keychains</option></select></label><label>Tell us more<textarea name="message" rows={4} required minLength={5} placeholder="How can we help you and your pet?"/></label>{error&&<p className="form-error">{error}</p>}<Button type="submit">{busy?"Sending…":"Send enquiry"}</Button></>}</form></div></section></>;
+}
+
+function AdminPage(){
+ const [token,setToken]=useState(localStorage.getItem("animality_admin_token")||""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[tab,setTab]=useState("reviews"),[reviews,setReviews]=useState<Review[]>([]),[photos,setPhotos]=useState<GalleryPhoto[]>([]),[enquiries,setEnquiries]=useState<any[]>([]),[error,setError]=useState(""),[busy,setBusy]=useState(false);
+ async function load(t:string){const [r,g,e]=await Promise.all([api<{reviews:Review[]}>("/admin/reviews",{},t),api<{photos:GalleryPhoto[]}>("/admin/gallery",{},t),api<{enquiries:any[]}>("/admin/enquiries",{},t)]);setReviews(r.reviews);setPhotos(g.photos);setEnquiries(e.enquiries);}
+ useEffect(()=>{if(token)load(token).catch(()=>{setToken("");localStorage.removeItem("animality_admin_token");});},[token]);
+ async function login(e:React.FormEvent){e.preventDefault();setError("");try{const x=await api<{token:string}>("/admin/login",{method:"POST",body:JSON.stringify({email,password})});localStorage.setItem("animality_admin_token",x.token);setToken(x.token);}catch(err){setError(err instanceof Error?err.message:"Login failed");}}
+ async function remove(path:string,id:number){if(!confirm("Delete this item?"))return;try{await api(path+"/"+id,{method:"DELETE"},token);await load(token);}catch(e){setError(e instanceof Error?e.message:"Delete failed");}}
+ async function addReview(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);try{await api("/admin/reviews",{method:"POST",body:JSON.stringify({customerName:f.get("customerName"),rating:Number(f.get("rating")),reviewText:f.get("reviewText"),sourceUrl:f.get("sourceUrl"),featured:true})},token);e.currentTarget.reset();await load(token);}catch(err){setError(err instanceof Error?err.message:"Unable to add review");}}
+ async function upload(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);setBusy(true);try{await api("/admin/gallery",{method:"POST",body:f},token);e.currentTarget.reset();await load(token);}catch(err){setError(err instanceof Error?err.message:"Upload failed");}finally{setBusy(false);}}
+ if(!token)return <section className="section cream admin-shell"><form className="contact-form admin-login" onSubmit={login}><div className="form-heading"><span>Private area</span><h2>Animality Admin</h2></div><label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>{error&&<p className="form-error">{error}</p>}<Button type="submit">Sign in</Button><p className="admin-hint">Admin credentials are configured securely on the backend.</p></form></section>;
+ return <section className="section cream admin-shell"><div className="container"><div className="admin-heading"><div><span className="eyebrow">Management</span><h1>Animality Dashboard</h1></div><button className="admin-logout" onClick={()=>{localStorage.removeItem("animality_admin_token");setToken("");}}><LogOut/> Sign out</button></div>{error&&<p className="form-error">{error}</p>}<div className="admin-tabs">{["reviews","gallery","enquiries"].map(x=><button className={tab===x?"selected":""} onClick={()=>setTab(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div>
+ {tab==="reviews"&&<><form className="admin-form" onSubmit={addReview}><h2>Add genuine customer review</h2><input name="customerName" required placeholder="Customer name"/><select name="rating"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select><textarea name="reviewText" required placeholder="Review text"/><input name="sourceUrl" type="url" placeholder="Original Google review URL (optional)"/><button className="btn btn-primary" type="submit">Add review</button></form><div className="admin-list">{reviews.map(r=><article key={r.id}><div><strong>{r.customerName} · {"★".repeat(r.rating)}</strong><p>{r.reviewText}</p></div><button onClick={()=>remove("/admin/reviews",r.id)} aria-label="Delete review"><Trash2/></button></article>)}</div></>}
+ {tab==="gallery"&&<><form className="admin-form" onSubmit={upload} encType="multipart/form-data"><h2>Upload pet photo</h2><input type="file" name="image" accept="image/jpeg,image/png,image/webp" required/><input name="caption" placeholder="Caption"/><select name="category"><option>Pets</option><option>Customers</option><option>Store</option><option>Events</option></select><button className="btn btn-primary" disabled={busy}>{busy?"Uploading…":"Upload photo"}</button></form><div className="admin-photo-grid">{photos.map(p=><article key={p.id}><img src={p.imageUrl} alt={p.caption}/><p>{p.caption}</p><button onClick={()=>remove("/admin/gallery",p.id)}><Trash2/></button></article>)}</div></>}
+ {tab==="enquiries"&&<div className="admin-list">{enquiries.map(e=><article key={e.id}><div><strong>{e.name} · {e.phone}</strong><p>{e.email} · {e.interest}</p><p>{e.message}</p><small>{new Date(e.createdAt).toLocaleString()}</small></div></article>)}</div>}
+ </div></section>;
 }
 
 function App() {
@@ -986,7 +915,7 @@ function App() {
   else if (route.startsWith("pet/")) page = <PetDetails id={route.split("/")[1]} />;
   else if (route === "gallery") page = <GalleryPage />;
   else if (route === "shop") page = <ShopPage />;
-  else if (route === "contact") page = <ContactPage />;
+  else if (route === "contact") page = <ContactPage />;\n  else if (route === "admin") page = <AdminPage />;
   return (
     <div>
       <Header current={current} />
