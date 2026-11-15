@@ -95,7 +95,7 @@ app.get("/api/products", asyncRoute(async (_req, res) => {
   const { rows } = await pool.query("SELECT id,name,category,description,price::float AS price,image_url AS \"imageUrl\" FROM products WHERE active=TRUE ORDER BY created_at DESC");
   res.set("Cache-Control", "public, max-age=60").json({ products: rows });
 }));
-app.get("/api/admin/products", auth, asyncRoute(async (_req, res) => {
+app.post("/api/admin/products/upload-image", auth, upload.single("image"), asyncRoute(async (req, res) => {\n  if (!req.file) return res.status(400).json({ error: "Choose a JPG, PNG or WebP image (max 8 MB)." });\n  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) return res.status(503).json({ error: "Product image storage is not configured. Add Cloudinary credentials to Render." });\n  const result = await new Promise((resolve, reject) => {\n    const stream = cloudinary.uploader.upload_stream({ folder: "animality-pets/products", resource_type: "image" }, (error, value) => error ? reject(error) : resolve(value));\n    stream.end(req.file.buffer);\n  });\n  res.status(201).json({ success: true, imageUrl: result.secure_url });\n}));\napp.get("/api/admin/products", auth, asyncRoute(async (_req, res) => {
   const { rows } = await pool.query("SELECT id,name,category,description,price::float AS price,image_url AS \"imageUrl\",active FROM products ORDER BY created_at DESC");
   res.json({ products: rows });
 }));
