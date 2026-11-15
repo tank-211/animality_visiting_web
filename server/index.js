@@ -25,7 +25,11 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
   cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET, secure: true });
 }
 app.use(helmet());
-app.use(cors({ origin(origin, callback) { if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) return callback(null, true); return callback(new Error("Origin is not allowed by CORS")); } }));
+const vercelPreviewOrigin = new RegExp("^https://animality-visiting-[a-z0-9-]+-tank-211s-projects\\.vercel\\.app$", "i");
+app.use(cors({ origin(origin, callback) {
+  if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin) || vercelPreviewOrigin.test(origin)) return callback(null, true);
+  return callback(new Error("Origin is not allowed by CORS"));
+} }));
 app.use(express.json({ limit: "1mb" }));
 app.use("/api/admin/login", rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }));
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 }, fileFilter: (_req, file, cb) => cb(null, ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) });
