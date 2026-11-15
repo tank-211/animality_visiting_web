@@ -20,6 +20,7 @@ import {
   Share2,
   ShieldCheck,
   ShoppingBag,
+  Star,
   Sparkles,
   Stethoscope,
   Users,
