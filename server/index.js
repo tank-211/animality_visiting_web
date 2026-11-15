@@ -69,6 +69,7 @@ app.post("/api/enquiries", rateLimit({ windowMs: 60 * 60 * 1000, limit: 8, stand
   res.status(201).json({ success: true, id: rows[0].id });
 }));
 app.post("/api/admin/login", asyncRoute(async (req, res) => {
+  if (!jwtSecret) return res.status(503).json({ error: "Admin authentication is not configured." });
   const email = String(req.body?.email || "").toLowerCase().trim();
   const password = String(req.body?.password || "");
   const { rows } = await pool.query("SELECT id,email,password_hash FROM admins WHERE email=$1", [email]);
