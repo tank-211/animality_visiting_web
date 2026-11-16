@@ -1740,3 +1740,10 @@ footer {
  .admin-product-actions{width:100%;justify-content:flex-end}
 }
 \n.product-image-upload{display:grid;gap:8px}.product-image-upload>label{font-weight:600;color:var(--ink)}.product-image-upload>small,.product-image-upload>span{font-size:12px;color:var(--muted)}.product-image-upload>input[type=file]{padding:12px;background:var(--cream);border:1px dashed var(--line);border-radius:10px}.product-image-preview{display:flex;align-items:center;gap:12px}.product-image-preview img{width:76px;height:76px;object-fit:cover;border-radius:10px}.product-image-preview button{border:0;background:#fff0f0;color:#a11b2b;border-radius:8px;padding:8px 12px}.product-card footer>button{cursor:pointer;position:relative;z-index:1;pointer-events:auto}.product-card footer>button:hover{opacity:.75}\n
+/* Official Animality Pets brand logo */
+.logo { gap: 0; flex: 0 0 auto; }
+.brand-logo-image { display:block; width:190px; height:58px; object-fit:contain; object-position:left center; }
+.logo-light .brand-logo-image { filter: none; }
+@media (max-width: 520px) {
+  .brand-logo-image { width:158px; height:52px; }
+}
