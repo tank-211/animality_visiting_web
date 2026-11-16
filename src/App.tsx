@@ -15,23 +15,31 @@ import {
   PawPrint,
   Phone,
   Quote,
+  LogOut,
+  Trash2,
   Share2,
   ShieldCheck,
   ShoppingBag,
+  Star,
   Sparkles,
   Stethoscope,
   Users,
   X,
 } from "lucide-react";
 
-type GoogleReview = { name?: string; rating?: number; text?: { text?: string }; relativePublishTimeDescription?: string; authorAttribution?: { displayName?: string } };
-type GooglePhoto = { name: string };
-type GoogleBusiness = { rating?: number; userRatingCount?: number; googleMapsUri?: string; reviews?: GoogleReview[]; photos?: GooglePhoto[] };
-function useGoogleBusiness() {
- const [data,setData]=useState<GoogleBusiness|null>(null);
- const [error,setError]=useState("");
- useEffect(()=>{fetch("/api/google-business").then(async r=>{if(!r.ok)throw new Error((await r.json()).error||"Google data unavailable");return r.json();}).then(setData).catch(e=>setError(e.message||"Unable to load Google data"));},[]);
- return {data,error};
+type Review = { id: number; customerName: string; rating: number; reviewText: string; sourceUrl?: string; featured: boolean };
+type GalleryPhoto = { id: number; imageUrl: string; caption: string; category: string };
+type Product = { id: number; name: string; category: string; description: string; price: number; imageUrl: string; active?: boolean };
+const WHATSAPP_NUMBER = "919356874251";
+const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+async function api<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
+  const headers = new Headers(options.headers);
+  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const response = await fetch(`${API_URL}/api${path}`, { ...options, headers });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Request failed");
+  return data as T;
 }
 
 const U = {
@@ -145,16 +153,7 @@ const pets = [
 
 const gallery = [U.gallery1, U.gallery2, U.gallery3, U.gallery4, U.gallery5, U.gallery6];
 
-const products = [
-  {
-    name: "Artisan Leather Collar",
-    category: "Walk essentials",
-    price: "₹1,299",
-    image: U.product1,
-  },
-  { name: "Plush Comfort Toy", category: "Playtime", price: "₹699", image: U.product2 },
-  { name: "Everyday Adventure Kit", category: "Curated set", price: "₹1,899", image: U.product3 },
-];
+
 
 function go(page: string) {
   window.location.hash = page === "home" ? "" : page;
@@ -168,12 +167,12 @@ function Logo({ light = false }: { light?: boolean }) {
       onClick={() => go("home")}
       aria-label="Animality Pets home"
     >
-      <span className="logo-mark">
-        <PawPrint size={25} strokeWidth={2.4} />
+      <span className="logo-mark" aria-hidden="true">
+        <PawPrint size={27} strokeWidth={2.8} />
       </span>
-      <span>
+      <span className="logo-wordmark">
         <strong>ANIMALITY</strong>
-        <small>PETS • NASHIK</small>
+        <small>PETS <i>•</i> NASHIK</small>
       </span>
     </button>
   );
@@ -214,7 +213,7 @@ function Header({ current }: { current: string }) {
             Care that feels like family <PawPrint size={13} />
           </span>
           <span>
-            <Phone size={14} /> +91 98765 43210
+            <Phone size={14} /> +91 93568 74251
           </span>
         </div>
       </div>
@@ -480,24 +479,19 @@ function WhySection() {
 }
 
 function GallerySection({ full = false }: { full?: boolean }) {
- const {data,error}=useGoogleBusiness();
- const photos=data?.photos||[];
+ const [photos,setPhotos]=useState<GalleryPhoto[]>([]);
+ useEffect(()=>{api<{photos:GalleryPhoto[]}>("/gallery").then(x=>setPhotos(x.photos)).catch(()=>setPhotos([]));},[]);
  return <section className="section white"><div className="container">
-  <div className="split-heading"><SectionTitle eyebrow="Life at Animality" title="Happy Tails, Beautiful Moments." copy="Photos from the Animality Pets Google Business Profile."/>
-  {data?.googleMapsUri&&<a className="instagram-link" href={data.googleMapsUri} target="_blank" rel="noreferrer"><Camera/> View on Google</a>}</div>
-  {photos.length?<div className={`gallery-grid ${full?"gallery-full":""}`}>{(full?photos:photos.slice(0,6)).map((p,i)=><div className={`gallery-item item-${i%6}`} key={p.name}><img src={`/api/google-business?photo=${encodeURIComponent(p.name)}`} alt={`Animality Pets business photo ${i+1}`}/></div>)}</div>:<p>{error||"Loading Google business photos…"}</p>}
-  <p className="google-attribution">Photos provided by Google</p>
+  <div className="split-heading"><SectionTitle eyebrow="Life at Animality" title="Happy Tails, Beautiful Moments." copy="Moments shared by the Animality Pets community."/></div>
+  {photos.length?<div className={`gallery-grid ${full?"gallery-full":""}`}>{(full?photos:photos.slice(0,6)).map((p,i)=><div className={`gallery-item item-${i%6}`} key={p.id}><img src={p.imageUrl} alt={p.caption||"Animality Pets gallery"}/>{p.caption&&<span>{p.caption}</span>}</div>)}</div>:<div className="empty-content"><Camera/><p>Our pet gallery is being updated. Visit us again soon!</p></div>}
  </div></section>;
 }
-
 function Testimonials() {
- const {data,error}=useGoogleBusiness();
- const reviews=data?.reviews||[];
+ const [reviews,setReviews]=useState<Review[]>([]);
+ useEffect(()=>{api<{reviews:Review[]}>("/reviews").then(x=>setReviews(x.reviews)).catch(()=>setReviews([]));},[]);
  return <section className="section testimonial-section"><div className="container">
-  <SectionTitle eyebrow="Google reviews" title="Stories From Our Pet Family." center/>
-  {data?.rating&&<div className="google-rating"><strong>{data.rating.toFixed(1)} ★</strong><span>{data.userRatingCount||0} Google ratings</span></div>}
-  {reviews.length?<div className="reviews">{reviews.map((r,i)=><article key={r.name||i}><Quote className="quote"/><div className="stars">{"★".repeat(Math.max(0,Math.min(5,Math.round(r.rating||0))))}</div><p>{r.text?.text||"Google review"}</p><div><strong>{r.authorAttribution?.displayName||"Google user"}</strong><small>{r.relativePublishTimeDescription||"Google reviewer"}</small></div></article>)}</div>:<p>{error||"Loading Google reviews…"}</p>}
-  {data?.googleMapsUri&&<p className="google-attribution"><a href={data.googleMapsUri} target="_blank" rel="noreferrer">Read more reviews on Google</a> · Reviews provided by Google</p>}
+  <SectionTitle eyebrow="Customer reviews" title="Stories From Our Pet Family." center/>
+  {reviews.length?<div className="reviews">{reviews.filter(r=>r.featured).map(r=><article key={r.id}><Quote className="quote"/><div className="stars">{"★".repeat(r.rating)}</div><p>{r.reviewText}</p><div><strong>{r.customerName}</strong><small>{r.sourceUrl?<a href={r.sourceUrl} target="_blank" rel="noreferrer">View original review</a>:"Animality Pets customer"}</small></div></article>)}</div>:<div className="empty-content"><Star/><p>Customer stories will appear here soon.</p></div>}
  </div></section>;
 }
 
@@ -517,7 +511,7 @@ function CTA() {
         <div className="button-row">
           <a
             className="btn btn-light"
-            href="https://wa.me/919876543210"
+            href="https://wa.me/919356874251"
             target="_blank"
             rel="noreferrer"
           >
@@ -570,15 +564,15 @@ function Footer() {
         <div className="contact-list">
           <h4>Come say hello</h4>
           <p>
-            <MapPin /> College Road, Nashik,
+            <MapPin /> 2, Agra–Mumbai Road, Jadhav Mala,
             <br />
-            Maharashtra 422005
+            Nashik, Maharashtra 422003
           </p>
           <p>
-            <Phone /> +91 98765 43210
+            <Phone /> +91 93568 74251
           </p>
           <p>
-            <Mail /> hello@animalitypets.in
+            <Mail /> animalitybreedingcentre@gmail.com
           </p>
           <p>
             <Clock3 /> Mon–Sun, 10am–8pm
@@ -587,7 +581,7 @@ function Footer() {
       </div>
       <div className="container copyright">
         <span>© 2025 Animality Pets. Made with care in Nashik.</span>
-        <span>Privacy · Terms</span>
+        <span><button className="admin-footer-link" onClick={() => go("admin")}>Admin</button> · Privacy · Terms</span>
       </div>
     </footer>
   );
@@ -787,7 +781,7 @@ function PetDetails({ id }: { id: string }) {
             </p>
             <div className="button-row">
               <Button onClick={() => go("contact")}>Send an enquiry</Button>
-              <a className="btn btn-secondary" href="https://wa.me/919876543210">
+              <a className="btn btn-secondary" href="https://wa.me/919356874251">
                 <MessageCircle size={18} /> WhatsApp
               </a>
             </div>
@@ -815,58 +809,39 @@ function GalleryPage() {
 }
 
 function ShopPage() {
-  const [cart, setCart] = useState(0);
-  return (
-    <>
-      <PageHero
-        eyebrow="The shop"
-        title="Good Things for Very Good Pets."
-        copy="A considered edit of beautiful, useful essentials for everyday pet life."
-        image={U.product3}
-      />
-      <section className="section cream">
-        <div className="container">
-          <div className="shop-toolbar">
-            <div>
-              <span>Curated collection</span>
-              <h2>Everyday favourites</h2>
-            </div>
-            <button className="cart">
-              <ShoppingBag /> Bag <b>{cart}</b>
-            </button>
-          </div>
-          <div className="product-grid">
-            {products.map((p) => (
-              <article className="product-card" key={p.name}>
-                <div>
-                  <img src={p.image} alt={p.name} />
-                  <button aria-label="Save product">
-                    <Heart />
-                  </button>
-                </div>
-                <small>{p.category}</small>
-                <h3>{p.name}</h3>
-                <footer>
-                  <strong>{p.price}</strong>
-                  <button onClick={() => setCart((c) => c + 1)}>
-                    Add to bag <PlusIcon />
-                  </button>
-                </footer>
-              </article>
-            ))}
-          </div>
-          <div className="shop-note">
-            <PackageCheck />
-            <span>
-              <strong>Need help choosing?</strong> Message our team for a recommendation based on
-              your pet’s age, breed and routine.
-            </span>
-            <Button onClick={() => go("contact")}>Ask Animality</Button>
-          </div>
-        </div>
-      </section>
-    </>
-  );
+  const [items,setItems]=useState<Product[]>([]);
+  const [cart,setCart]=useState<Record<string,number>>({});
+  const [showCart,setShowCart]=useState(false);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState("");
+  useEffect(()=>{api<{products:Product[]}>("/products").then(x=>setItems(x.products)).catch(e=>setError(e instanceof Error?e.message:"Unable to load products.")).finally(()=>setLoading(false));},[]);
+  const cartItems=items.filter(p=>(cart[String(p.id)]||0)>0);
+  const count=Object.values(cart).reduce((a,b)=>a+b,0);
+  const total=cartItems.reduce((sum,p)=>sum+p.price*cart[String(p.id)],0);
+  const money=(n:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(n);
+  function orderOnWhatsApp(){
+    if(!cartItems.length)return;
+    const lines=cartItems.map(p=>`• ${p.name} × ${cart[String(p.id)]} — ${money(p.price*cart[String(p.id)])}`);
+    const message=["Hello Animality Pets! I would like to place an order:", "",...lines,"",`Total: ${money(total)}`,"","Please confirm availability and delivery/pickup details."].join("\n");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,"_blank","noopener,noreferrer");
+  }
+  return <>
+    <PageHero eyebrow="The shop" title="Good Things for Very Good Pets." copy="A considered edit of beautiful, useful essentials for everyday pet life." image={U.product3}/>
+    <section className="section cream"><div className="container">
+      <div className="shop-toolbar"><div><span>Curated collection</span><h2>Everyday favourites</h2></div><button className="cart" onClick={()=>setShowCart(v=>!v)}><ShoppingBag/> Bag <b>{count}</b></button></div>
+      {error&&<p className="form-error">{error}</p>}
+      {loading?<div className="empty-content"><p>Loading products…</p></div>:items.length===0?<div className="empty-content"><ShoppingBag/><p>Our shop is being updated. Please check back soon.</p></div>:<div className="product-grid">
+        {items.map(p=><article className="product-card" key={p.id}><div><img src={p.imageUrl} alt={p.name}/></div><small>{p.category}</small><h3>{p.name}</h3>{p.description&&<p>{p.description}</p>}<footer><strong>{money(p.price)}</strong><button type="button" onClick={()=>{setCart(old=>({...old,[String(p.id)]:(old[String(p.id)]||0)+1}));setShowCart(true);}}>Add to bag <PlusIcon/></button></footer></article>)}
+      </div>}
+      {showCart&&<div className="admin-form shop-cart-panel"><div className="shop-toolbar"><h2>Your shopping bag</h2><button type="button" onClick={()=>setShowCart(false)}>Close</button></div>
+        {!cartItems.length?<p>Your bag is empty. Add a product to get started.</p>:<>
+          {cartItems.map(p=><div className="admin-list" key={p.id}><article><div><strong>{p.name}</strong><p>{money(p.price)} each</p><div className="cart-quantity"><button type="button" onClick={()=>setCart(old=>({...old,[String(p.id)]:Math.max(0,(old[String(p.id)]||0)-1)}))}>−</button><b>{cart[String(p.id)]}</b><button type="button" onClick={()=>setCart(old=>({...old,[String(p.id)]:(old[String(p.id)]||0)+1}))}>+</button><button type="button" onClick={()=>setCart(old=>({...old,[String(p.id)]:0}))}>Remove</button></div></div><strong>{money(p.price*cart[String(p.id)])}</strong></article></div>)}
+          <h3>Order total: {money(total)}</h3><p>You'll confirm availability, delivery and payment directly with Animality Pets on WhatsApp.</p><button className="btn btn-primary" type="button" onClick={orderOnWhatsApp}>Continue on WhatsApp <MessageCircle/></button>
+        </>}
+      </div>}
+      <div className="shop-note"><PackageCheck/><span><strong>Need help choosing?</strong> Message our team for a recommendation based on your pet’s age, breed and routine.</span><Button onClick={()=>go("contact")}>Ask Animality</Button></div>
+    </div></section>
+  </>;
 }
 
 function PlusIcon() {
@@ -874,101 +849,30 @@ function PlusIcon() {
 }
 
 function ContactPage() {
-  const [sent, setSent] = useState(false);
-  return (
-    <>
-      <PageHero
-        eyebrow="Contact"
-        title="Let’s Talk About Your Pet."
-        copy="Questions, enquiries or simply looking for advice? Our friendly Nashik team is here."
-      />
-      <section className="section cream">
-        <div className="container contact-grid">
-          <div className="contact-copy">
-            <SectionTitle
-              eyebrow="Come say hello"
-              title="We’re Always Happy to Help."
-              copy="Reach out in the way that feels easiest. We usually respond within a few hours during store timings."
-            />
-            <div className="contact-cards">
-              <a href="tel:+919876543210">
-                <Phone />
-                <span>
-                  <small>Call our team</small>
-                  <strong>+91 98765 43210</strong>
-                </span>
-              </a>
-              <a href="mailto:hello@animalitypets.in">
-                <Mail />
-                <span>
-                  <small>Email us</small>
-                  <strong>hello@animalitypets.in</strong>
-                </span>
-              </a>
-              <a href="https://maps.google.com" target="_blank" rel="noreferrer">
-                <MapPin />
-                <span>
-                  <small>Visit in Nashik</small>
-                  <strong>College Road, Nashik 422005</strong>
-                </span>
-              </a>
-            </div>
-          </div>
-          <form
-            className="contact-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setSent(true);
-            }}
-          >
-            <div className="form-heading">
-              <span>Send an enquiry</span>
-              <h2>How can we help?</h2>
-            </div>
-            {sent ? (
-              <div className="success">
-                <BadgeCheck />
-                <h3>Thank you!</h3>
-                <p>Your message is on its way. Our team will be in touch shortly.</p>
-                <Button onClick={() => setSent(false)}>Send another</Button>
-              </div>
-            ) : (
-              <>
-                <label>
-                  Your name
-                  <input required placeholder="Full name" />
-                </label>
-                <div className="field-row">
-                  <label>
-                    Phone number
-                    <input required type="tel" placeholder="+91" />
-                  </label>
-                  <label>
-                    Email address
-                    <input type="email" placeholder="you@email.com" />
-                  </label>
-                </div>
-                <label>
-                  I’m interested in
-                  <select>
-                    <option>Pet enquiry</option>
-                    <option>Pet care & guidance</option>
-                    <option>Products & accessories</option>
-                    <option>Customized keychains</option>
-                  </select>
-                </label>
-                <label>
-                  Tell us more
-                  <textarea rows={4} placeholder="How can we help you and your pet?" />
-                </label>
-                <Button type="submit">Send enquiry</Button>
-              </>
-            )}
-          </form>
-        </div>
-      </section>
-    </>
-  );
+ const [sent,setSent]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");const f=new FormData(e.currentTarget);try{await api("/enquiries",{method:"POST",body:JSON.stringify({name:f.get("name"),phone:f.get("phone"),email:f.get("email"),interest:f.get("interest"),message:f.get("message")})});setSent(true);}catch(err){setError(err instanceof Error?err.message:"Unable to send enquiry. Please contact us on WhatsApp.");}finally{setBusy(false);}}
+ return <><PageHero eyebrow="Contact" title="Let’s Talk About Your Pet." copy="Questions, enquiries or simply looking for advice? Our friendly Nashik team is here."/>
+ <section className="section cream"><div className="container contact-grid"><div className="contact-copy"><SectionTitle eyebrow="Come say hello" title="We’re Always Happy to Help." copy="Reach out in the way that feels easiest."/><div className="contact-cards"><a href="https://wa.me/919356874251"><Phone/><span><small>Call or WhatsApp</small><strong>Contact Animality Pets</strong></span></a><a href="https://www.google.com/maps/search/?api=1&query=Animality+Pets%2C+2%2C+Agra+Mumbai+Road%2C+Jadhav+Mala%2C+Nashik%2C+Maharashtra+422003"><MapPin/><span><small>Visit in Nashik</small><strong>Nashik, Maharashtra</strong></span></a></div></div>
+ <form className="contact-form" onSubmit={submit}><div className="form-heading"><span>Send an enquiry</span><h2>How can we help?</h2></div>{sent?<div className="success"><BadgeCheck/><h3>Thank you!</h3><p>Your enquiry has been received. Our team will be in touch.</p><Button onClick={()=>setSent(false)}>Send another</Button></div>:<><label>Your name<input name="name" required minLength={2} placeholder="Full name"/></label><div className="field-row"><label>Phone number<input name="phone" required type="tel" pattern="[+0-9() -]{8,20}" placeholder="+91"/></label><label>Email address<input name="email" type="email" placeholder="you@email.com"/></label></div><label>I’m interested in<select name="interest"><option>Pet enquiry</option><option>Pet care & guidance</option><option>Products & accessories</option><option>Customized keychains</option></select></label><label>Tell us more<textarea name="message" rows={4} required minLength={5} placeholder="How can we help you and your pet?"/></label>{error&&<p className="form-error">{error}</p>}<Button type="submit">{busy?"Sending…":"Send enquiry"}</Button></>}</form></div></section></>;
+}
+
+function AdminPage(){
+ const [token,setToken]=useState(localStorage.getItem("animality_admin_token")||""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[tab,setTab]=useState("products"),[reviews,setReviews]=useState<Review[]>([]),[photos,setPhotos]=useState<GalleryPhoto[]>([]),[enquiries,setEnquiries]=useState<any[]>([]),[items,setItems]=useState<Product[]>([]),[editing,setEditing]=useState<Product|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[productImageUrl,setProductImageUrl]=useState(""),[uploadingProductImage,setUploadingProductImage]=useState(false);
+ async function load(t:string){const [r,g,e,p]=await Promise.all([api<{reviews:Review[]}>("/admin/reviews",{},t),api<{photos:GalleryPhoto[]}>("/admin/gallery",{},t),api<{enquiries:any[]}>("/admin/enquiries",{},t),api<{products:Product[]}>("/admin/products",{},t)]);setReviews(r.reviews);setPhotos(g.photos);setEnquiries(e.enquiries);setItems(p.products);}
+ useEffect(()=>{if(token)load(token).catch(()=>{setToken("");localStorage.removeItem("animality_admin_token");});},[token]);
+ async function login(e:React.FormEvent){e.preventDefault();setError("");try{const x=await api<{token:string}>("/admin/login",{method:"POST",body:JSON.stringify({email,password})});localStorage.setItem("animality_admin_token",x.token);setToken(x.token);}catch(err){setError(err instanceof Error?err.message:"Login failed");}}
+ async function remove(path:string,id:number){if(!confirm("Delete this item?"))return;try{await api(path+"/"+id,{method:"DELETE"},token);await load(token);}catch(e){setError(e instanceof Error?e.message:"Delete failed");}}
+ async function addReview(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const form=e.currentTarget;const f=new FormData(form);try{await api("/admin/reviews",{method:"POST",body:JSON.stringify({customerName:f.get("customerName"),rating:Number(f.get("rating")),reviewText:f.get("reviewText"),sourceUrl:f.get("sourceUrl"),featured:true})},token);form.reset();await load(token);}catch(err){setError(err instanceof Error?err.message:"Unable to add review");}}
+ async function upload(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const form=e.currentTarget;const f=new FormData(form);setBusy(true);try{await api("/admin/gallery",{method:"POST",body:f},token);form.reset();await load(token);}catch(err){setError(err instanceof Error?err.message:"Upload failed");}finally{setBusy(false);}}
+ async function uploadProductImage(e:React.ChangeEvent<HTMLInputElement>){const file=e.target.files?.[0];if(!file)return;if(!["image/jpeg","image/png","image/webp"].includes(file.type)){setError("Choose a JPG, PNG or WebP image.");e.target.value="";return;}if(file.size>8*1024*1024){setError("Product image must be 8 MB or smaller.");e.target.value="";return;}const data=new FormData();data.append("image",file);setUploadingProductImage(true);setError("");try{const result=await api<{imageUrl:string}>("/admin/products/upload-image",{method:"POST",body:data},token);setProductImageUrl(result.imageUrl);}catch(err){setError(err instanceof Error?err.message:"Product image upload failed.");}finally{setUploadingProductImage(false);e.target.value="";}}
+ async function saveProduct(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const form=e.currentTarget;const f=new FormData(form);setBusy(true);setError("");const payload={name:f.get("name"),category:f.get("category"),description:f.get("description"),price:Number(f.get("price")),imageUrl:productImageUrl.trim(),active:f.get("active")==="on"};try{await api(editing?"/admin/products/"+editing.id:"/admin/products",{method:editing?"PUT":"POST",body:JSON.stringify(payload)},token);form.reset();setEditing(null);setProductImageUrl("");await load(token);}catch(err){setError(err instanceof Error?err.message:"Unable to save product");}finally{setBusy(false);}}
+ if(!token)return <section className="section cream admin-shell"><form className="contact-form admin-login" onSubmit={login}><div className="form-heading"><span>Private area</span><h2>Animality Admin</h2></div><label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>{error&&<p className="form-error">{error}</p>}<Button type="submit">Sign in</Button><p className="admin-hint">Admin credentials are configured securely on the backend.</p></form></section>;
+ return <section className="section cream admin-shell"><div className="container"><div className="admin-heading"><div><span className="eyebrow">Management</span><h1>Animality Dashboard</h1></div><button className="admin-logout" onClick={()=>{localStorage.removeItem("animality_admin_token");setToken("");}}><LogOut/> Sign out</button></div>{error&&<p className="form-error">{error}</p>}<div className="admin-tabs">{["products","reviews","gallery","enquiries"].map(x=><button key={x} className={tab===x?"selected":""} onClick={()=>{setTab(x);setError("");}}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div>
+ {tab==="products"&&<><form className="admin-form" onSubmit={saveProduct}><h2>{editing?"Edit product":"Add shop product"}</h2><input name="name" key={editing?.id||"new-name"} defaultValue={editing?.name||""} required maxLength={120} placeholder="Product name"/><input name="category" key={editing?.id||"new-category"} defaultValue={editing?.category||""} required maxLength={80} placeholder="Category (e.g. Food, Toys, Grooming)"/><textarea name="description" key={editing?.id||"new-description"} defaultValue={editing?.description||""} maxLength={2000} placeholder="Short product description"/><input name="price" key={editing?.id||"new-price"} type="number" min="0" step="0.01" defaultValue={editing?.price??""} required placeholder="Price in INR"/><div className="product-image-upload"><label htmlFor="product-image-file">Product image</label><input id="product-image-file" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadProductImage} disabled={uploadingProductImage}/><small>Choose a JPG, PNG or WebP image (max 8 MB). It uploads securely to Cloudinary.</small>{uploadingProductImage&&<span>Uploading image…</span>}{productImageUrl&&<div className="product-image-preview"><img src={productImageUrl} alt="Product preview"/><button type="button" onClick={()=>setProductImageUrl("")}>Remove image</button></div>}<input name="imageUrl" type="url" value={productImageUrl} onChange={e=>setProductImageUrl(e.target.value)} required placeholder="Image URL will appear here after upload"/></div><label className="product-active"><input key={editing?`active-${editing.id}-${editing.active}`:"new-active"} type="checkbox" name="active" defaultChecked={editing?editing.active!==false:true}/> Show this product in the public shop</label><div className="button-row"><button className="btn btn-primary" disabled={busy||uploadingProductImage}>{busy?"Saving…":editing?"Save changes":"Add product"}</button>{editing&&<button className="btn btn-secondary" type="button" onClick={()=>{setEditing(null);setProductImageUrl("");}}>Cancel edit</button>}</div></form><div className="admin-list">{items.map(p=><article key={p.id}><img className="admin-product-thumb" src={p.imageUrl} alt={p.name}/><div><strong>{p.name} · ₹{p.price.toLocaleString("en-IN")}</strong><p>{p.category} · {p.active?"Visible in shop":"Hidden from shop"}</p><p>{p.description}</p></div><div className="admin-product-actions"><button type="button" onClick={()=>{setEditing(p);setProductImageUrl(p.imageUrl);setError("");}}>Edit</button><button type="button" onClick={()=>remove("/admin/products",p.id)} aria-label={"Delete "+p.name}><Trash2/></button></div></article>)}</div></>}
+ {tab==="reviews"&&<><form className="admin-form" onSubmit={addReview}><h2>Add genuine customer review</h2><input name="customerName" required placeholder="Customer name"/><select name="rating"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select><textarea name="reviewText" required placeholder="Review text"/><input name="sourceUrl" type="url" placeholder="Original Google review URL (optional)"/><button className="btn btn-primary" type="submit">Add review</button></form><div className="admin-list">{reviews.map(r=><article key={r.id}><div><strong>{r.customerName} · {"★".repeat(r.rating)}</strong><p>{r.reviewText}</p></div><button onClick={()=>remove("/admin/reviews",r.id)} aria-label="Delete review"><Trash2/></button></article>)}</div></>}
+ {tab==="gallery"&&<><form className="admin-form" onSubmit={upload} encType="multipart/form-data"><h2>Upload pet photo</h2><input type="file" name="image" accept="image/jpeg,image/png,image/webp" required/><input name="caption" placeholder="Caption"/><select name="category"><option>Pets</option><option>Customers</option><option>Store</option><option>Events</option></select><button className="btn btn-primary" disabled={busy}>{busy?"Uploading…":"Upload photo"}</button></form><div className="admin-photo-grid">{photos.map(p=><article key={p.id}><img src={p.imageUrl} alt={p.caption}/><p>{p.caption}</p><button onClick={()=>remove("/admin/gallery",p.id)}><Trash2/></button></article>)}</div></>}
+ {tab==="enquiries"&&<div className="admin-list">{enquiries.map(e=><article key={e.id}><div><strong>{e.name} · {e.phone}</strong><p>{e.email} · {e.interest}</p><p>{e.message}</p><small>{new Date(e.createdAt).toLocaleString()}</small></div></article>)}</div>}
+ </div></section>;
 }
 
 function App() {
@@ -987,6 +891,7 @@ function App() {
   else if (route === "gallery") page = <GalleryPage />;
   else if (route === "shop") page = <ShopPage />;
   else if (route === "contact") page = <ContactPage />;
+  else if (route === "admin") page = <AdminPage />;
   return (
     <div>
       <Header current={current} />
@@ -994,7 +899,7 @@ function App() {
       <Footer />
       <a
         className="whatsapp"
-        href="https://wa.me/919876543210"
+        href="https://wa.me/919356874251"
         target="_blank"
         rel="noreferrer"
         aria-label="Chat with Animality Pets on WhatsApp"

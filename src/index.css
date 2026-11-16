@@ -1713,3 +1713,129 @@ footer {
 .google-rating strong{font-size:24px;color:#d4a017}
 .google-attribution{text-align:center;font-size:11px;color:var(--muted);margin-top:20px}
 .google-attribution a{color:var(--green);text-decoration:underline}
+
+.empty-content{min-height:140px;display:grid;place-content:center;justify-items:center;gap:12px;color:var(--muted);text-align:center}.empty-content svg{color:var(--gold);width:30px;height:30px}.reviews a{text-decoration:underline;color:var(--green)}.form-error{color:#a11b2b;background:#fff0f0;padding:10px 12px;border-radius:8px;font-size:13px}.admin-shell{min-height:65vh}.admin-login{max-width:460px;margin:0 auto}.admin-hint{font-size:12px;color:var(--muted);margin-top:16px}.admin-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.admin-heading h1{font-size:clamp(30px,4vw,44px)}.admin-logout,.admin-tabs button{border:1px solid var(--line);border-radius:10px;background:white;padding:12px 16px;display:flex;align-items:center;gap:8px;color:var(--green)}.admin-tabs{display:flex;gap:10px;margin-bottom:24px}.admin-tabs button.selected{background:var(--green);color:white}.admin-form{background:#fff;padding:24px;border-radius:18px;display:grid;gap:12px;max-width:700px;margin-bottom:24px}.admin-form h2{font-size:21px}.admin-form input,.admin-form select,.admin-form textarea{padding:12px;border:1px solid var(--line);border-radius:9px;min-width:0}.admin-list{display:grid;gap:12px}.admin-list article{display:flex;justify-content:space-between;gap:20px;background:white;border-radius:14px;padding:18px}.admin-list p{margin-top:7px;color:var(--muted)}.admin-list button,.admin-photo-grid button{border:0;background:#fff0f0;color:#a11b2b;border-radius:8px;padding:8px;height:max-content}.admin-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}.admin-photo-grid article{background:white;padding:10px;border-radius:12px}.admin-photo-grid img{height:150px;object-fit:cover;border-radius:8px}.admin-photo-grid p{font-size:12px;padding:8px 0}.admin-photo-grid button{float:right}@media(max-width:600px){.admin-heading{align-items:flex-start;gap:15px;flex-direction:column}.admin-tabs{overflow:auto}.admin-tabs button{white-space:nowrap}}
+
+.admin-footer-link{border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+
+/* Shop cart and admin product management */
+.shop-cart-panel{max-width:900px;margin:28px 0;padding:24px}
+.shop-cart-panel .shop-toolbar{margin-bottom:16px}
+.shop-cart-panel .admin-list article{align-items:center}
+.cart-quantity{display:flex;align-items:center;gap:12px;margin-top:10px}
+.cart-quantity button{border:1px solid var(--line);border-radius:8px;background:var(--cream);padding:5px 11px;color:var(--green)}
+.shop-cart-panel>.btn{margin-top:10px}
+.product-card>p{color:var(--muted);font-size:13px;line-height:1.5;margin:8px 0 14px}
+.admin-product-thumb{width:88px;height:88px;object-fit:cover;border-radius:10px;flex:0 0 88px}
+.admin-product-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.admin-product-actions button{border:1px solid var(--line);background:white;color:var(--green);border-radius:8px;padding:8px 12px}
+.admin-product-actions button:last-child{background:#fff0f0;color:#a11b2b;border:0}
+.product-active{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.product-active input{width:18px;height:18px;accent-color:var(--green)}
+@media(max-width:600px){
+ .shop-cart-panel{padding:18px}
+ .admin-list article{gap:10px;flex-wrap:wrap}
+ .admin-product-thumb{width:64px;height:64px;flex-basis:64px}
+ .admin-product-actions{width:100%;justify-content:flex-end}
+}
+\n.product-image-upload{display:grid;gap:8px}.product-image-upload>label{font-weight:600;color:var(--ink)}.product-image-upload>small,.product-image-upload>span{font-size:12px;color:var(--muted)}.product-image-upload>input[type=file]{padding:12px;background:var(--cream);border:1px dashed var(--line);border-radius:10px}.product-image-preview{display:flex;align-items:center;gap:12px}.product-image-preview img{width:76px;height:76px;object-fit:cover;border-radius:10px}.product-image-preview button{border:0;background:#fff0f0;color:#a11b2b;border-radius:8px;padding:8px 12px}.product-card footer>button{cursor:pointer;position:relative;z-index:1;pointer-events:auto}.product-card footer>button:hover{opacity:.75}\n
+/* Official Animality Pets logo: use the supplied dog-and-cat artwork. */
+.header .logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 220px;
+  height: 76px;
+  padding: 0;
+  gap: 0;
+  overflow: visible;
+}
+.header .logo .brand-logo-image {
+  display: block;
+  width: 220px;
+  min-width: 220px;
+  max-width: none;
+  height: 76px;
+  object-fit: contain;
+  object-position: left center;
+}
+@media (max-width: 760px) {
+  .header .logo {
+    flex-basis: 180px;
+    width: 180px;
+    min-width: 180px;
+    height: 66px;
+  }
+  .header .logo .brand-logo-image {
+    width: 180px;
+    min-width: 180px;
+    height: 66px;
+  }
+}
+@media (max-width: 520px) {
+  .header .logo {
+    flex-basis: 150px;
+    width: 150px;
+    min-width: 150px;
+    height: 58px;
+  }
+  .header .logo .brand-logo-image {
+    width: 150px;
+    min-width: 150px;
+    height: 58px;
+  }
+}
+
+/* FINAL BRAND RESTORE — show the supplied Animality Pets artwork in both locations */
+.header {
+  min-height: 96px;
+  height: auto;
+}
+.header .header-inner {
+  min-height: 96px;
+  height: 96px;
+  display: flex !important;
+  align-items: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.header .logo,
+.footer-brand .logo {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: transparent !important;
+  flex: 0 0 auto !important;
+}
+.header .logo .brand-logo-image {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 210px !important;
+  height: 88px !important;
+  max-width: none !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+}
+.footer-brand .logo .brand-logo-image {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 220px !important;
+  height: 150px !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+}
+@media (max-width: 768px) {
+  .header .header-inner { min-height: 76px; height: 76px; }
+  .header { min-height: 76px; }
+  .header .logo .brand-logo-image { width: 170px !important; height: 70px !important; }
+}
