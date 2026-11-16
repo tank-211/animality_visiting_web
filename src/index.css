@@ -1747,3 +1747,16 @@ footer {
 @media (max-width: 520px) {
   .brand-logo-image { width:158px; height:52px; }
 }
+
+
+/* Reliable text-and-icon brand lockup (no external image dependency) */
+.logo { gap: 11px; flex: 0 0 auto; }
+.logo-wordmark { display: grid; line-height: 1; text-align: left; }
+.logo-wordmark strong { font: 700 18px/1 "Poppins", sans-serif; letter-spacing: 1.4px; }
+.logo-wordmark small { font-size: 8px; letter-spacing: 2.4px; margin-top: 7px; }
+.logo-wordmark small i { font-style: normal; padding: 0 2px; }
+.logo-light .logo-mark { color: var(--green); }
+@media (max-width: 520px) {
+  .logo-wordmark strong { font-size: 15px; }
+  .logo-wordmark small { font-size: 7px; }
+}
