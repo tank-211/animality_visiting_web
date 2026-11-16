@@ -25,9 +25,10 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
   cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET, secure: true });
 }
 app.use(helmet());
+const productionOrigin = "https://animalitypets.vercel.app";
 const vercelPreviewOrigin = new RegExp("^https://animality-visiting-[a-z0-9-]+-tank-211s-projects\\.vercel\\.app$", "i");
 app.use(cors({ origin(origin, callback) {
-  if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin) || vercelPreviewOrigin.test(origin)) return callback(null, true);
+  if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin) || origin === productionOrigin || vercelPreviewOrigin.test(origin)) return callback(null, true);
   return callback(new Error("Origin is not allowed by CORS"));
 } }));
 app.use(express.json({ limit: "1mb" }));
