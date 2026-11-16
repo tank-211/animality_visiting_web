@@ -1788,3 +1788,54 @@ footer {
     height: 58px;
   }
 }
+
+/* FINAL BRAND RESTORE — show the supplied Animality Pets artwork in both locations */
+.header {
+  min-height: 96px;
+  height: auto;
+}
+.header .header-inner {
+  min-height: 96px;
+  height: 96px;
+  display: flex !important;
+  align-items: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.header .logo,
+.footer-brand .logo {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: transparent !important;
+  flex: 0 0 auto !important;
+}
+.header .logo .brand-logo-image {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 210px !important;
+  height: 88px !important;
+  max-width: none !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+}
+.footer-brand .logo .brand-logo-image {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 220px !important;
+  height: 150px !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+}
+@media (max-width: 768px) {
+  .header .header-inner { min-height: 76px; height: 76px; }
+  .header { min-height: 76px; }
+  .header .logo .brand-logo-image { width: 170px !important; height: 70px !important; }
+}
