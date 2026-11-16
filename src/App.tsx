@@ -167,13 +167,11 @@ function Logo({ light = false }: { light?: boolean }) {
       onClick={() => go("home")}
       aria-label="Animality Pets home"
     >
-      <span className="logo-mark">
-        <PawPrint size={25} strokeWidth={2.4} />
-      </span>
-      <span>
-        <strong>ANIMALITY</strong>
-        <small>PETS • NASHIK</small>
-      </span>
+      <img
+        className="brand-logo-image"
+        src="/brand/animality-logo.webp"
+        alt="Animality Pets"
+      />
     </button>
   );
 }
